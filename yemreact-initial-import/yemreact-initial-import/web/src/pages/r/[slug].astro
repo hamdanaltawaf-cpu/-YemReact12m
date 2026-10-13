@@ -1,0 +1,79 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import VideoStage from '../../islands/VideoStage.jsx';
+import DetailActions from '../../islands/DetailActions.jsx';
+import ClipThumb from '../../components/ClipThumb.astro';
+import { getJson } from '../../lib/api.js';
+import { categories } from '../../lib/tokens.js';
+
+const catById = Object.fromEntries(categories.map((c) => [c.id, c]));
+
+// توليد صفحة ثابتة لكل رياكشن منشور (SSG)
+export async function getStaticPaths() {
+  const { reactions } = await getJson('/api/v1/reactions?limit=500');
+  const catByName = Object.fromEntries(categories.map((c) => [c.id, c.name]));
+
+  return reactions.map((r) => {
+    const related = reactions
+      .filter((x) => x.cat === r.cat && x.id !== r.id)
+      .sort((a, b) => (b.stats?.views || 0) - (a.stats?.views || 0))
+      .slice(0, 5);
+    return {
+      params: { slug: r.slug },
+      props: { reaction: r, related, categoryName: catByName[r.cat] || r.cat },
+    };
+  });
+}
+
+const { reaction, related, categoryName } = Astro.props;
+const catColor = catById[reaction.cat]?.color || 'var(--paper)';
+
+const title = `${reaction.quote} — يمن رياكت`;
+const description = `${reaction.situation}. ${reaction.quote} — رياكشن يمني جاهز تاخذه وتحطه.`;
+const image = reaction.thumb ? new URL(reaction.thumb, Astro.site).href : undefined;
+---
+
+<Layout title={title} description={description} image={image}>
+  <a href="/" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6" /></svg>
+    رجوع للمكتبة
+  </a>
+
+  <div class="detail-layout">
+    <VideoStage client:load reaction={reaction} />
+
+    <div class="detail-meta">
+      <span class="detail-cat" style={`color:${catColor}`}>{categoryName}</span>
+      <h1 class="detail-quote">{reaction.quote}</h1>
+      <div class="detail-situation">{reaction.situation}</div>
+      {reaction.desc && <div class="detail-situation">{reaction.desc}</div>}
+      <div class="detail-rid mono">{reaction.id}</div>
+
+      <div class="detail-stats">
+        <span>{reaction.stats?.views ?? 0} مشاهدة</span>
+        <span>{reaction.stats?.saves ?? 0} حفظ</span>
+        <span>{reaction.stats?.downloads ?? 0} تنزيل</span>
+      </div>
+
+      <DetailActions client:load reaction={reaction} />
+
+      <a href={`/report?rid=${reaction.id}`} class="report-link">
+        أبلغ عن محتوى
+      </a>
+    </div>
+  </div>
+
+  {related.length > 0 && (
+    <div class="related">
+      <div class="related-title">رياكشنات قريبة</div>
+      <div class="related-row">
+        {related.map((r) => (
+          <a href={`/r/${r.slug}`} class="mini-card">
+            <ClipThumb reaction={r} size="sm" />
+            <div class="mini-quote" style={`color:${catById[r.cat]?.color || 'var(--paper)'}`}>{r.quote}</div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )}
+</Layout>
