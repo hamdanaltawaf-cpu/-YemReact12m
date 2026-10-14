@@ -1,0 +1,46 @@
+# ============================================================
+# YemReact — نشر الإنتاج (VPS واحد: API + PostgreSQL + ffmpeg + قرص محلي)
+# ============================================================
+# الاستخدام:
+#   1) cp .env.example .env  ثم املأ الأسرار بقيم قوية (openssl rand -hex 32)
+#   2) docker compose up -d --build
+# الخدمات قابلة للترقية لاحقًا إلى R2/Mux/Resend دون تغيير الكود.
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: yemreact
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-yemreact_db}
+      POSTGRES_DB: yemreact
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yemreact -d yemreact"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # توجيه قاعدة البيانات إلى خدمة db داخل الشبكة
+      DATABASE_URL: postgres://yemreact:${POSTGRES_PASSWORD:-yemreact_db}@db:5432/yemreact
+      HOST: 0.0.0.0
+      PORT: 4173
+      NODE_ENV: production
+    ports:
+      - "4173:4173"
+    volumes:
+      - media:/app/data          # تخزين الوسائط المرفوعة (قرص محلي)
+
+volumes:
+  pgdata:
+  media:

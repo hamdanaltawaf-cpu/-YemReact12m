@@ -1,0 +1,27 @@
+/* ملف مولّد تلقائيًا من design-tokens.js — لا تُعدّله يدويًا */
+:root {
+  --ink: #121214;
+  --ink2: #1a1a1d;
+  --ink3: #232327;
+  --amber: #c1592e;
+  --amberLight: #e0824b;
+  --paper: #f3eae0;
+  --paperDim: #c9bfb4;
+  --coral: #ff5a36;
+  --grey: #6b625c;
+  --greyLight: #9c9289;
+  --laugh: #f4c430;
+  --shock: #7c5cff;
+  --anger: #c81e3a;
+  --surprise: #2cb6c4;
+  --embarrass: #f17fb2;
+  --approve: #4caf6d;
+  --reject: #6e8296;
+  --sarcasm: #d98e04;
+  --hype: #e8712e;
+  --f-display-ar: 'Lalezar', sans-serif;
+  --f-body-ar: 'Cairo', sans-serif;
+  --f-display-en: 'Archivo Black', sans-serif;
+  --f-body-en: 'Inter', sans-serif;
+  --f-mono: 'IBM Plex Mono', monospace;
+}
